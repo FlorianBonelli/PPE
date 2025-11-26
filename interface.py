@@ -14,18 +14,30 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Thème moderne blanc et bleu marine - COMPACT
+# Thème moderne ChatGPT-like
 THEME = """
 <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
     :root {
         --bg-primary: #ffffff;
-        --bg-secondary: #f8fafc;
-        --accent-blue: #1e40af;
-        --accent-blue-light: #3b82f6;
-        --accent-blue-soft: #dbeafe;
-        --text-primary: #0f172a;
-        --text-secondary: #64748b;
-        --border: #e2e8f0;
+        --bg-secondary: #f7f7f7;
+        --bg-tertiary: #ececf1;
+        --accent-blue: #10a37f;
+        --accent-blue-light: #19c37d;
+        --text-primary: #0d0d0d;
+        --text-secondary: #565869;
+        --border: #d1d5db;
+        --message-user: #10a37f;
+        --message-assistant: #f7f7f7;
+    }
+    
+    html, body {
+        background-color: var(--bg-primary);
     }
     
     .stApp {
@@ -37,227 +49,351 @@ THEME = """
     }
     
     .block-container {
-        padding-top: 4rem !important;
-        padding-bottom: 6rem !important;
-        max-width: 90rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        max-width: 100% !important;
     }
     
-    .section-spacing {
-        margin-bottom: 2.5rem;
-    }
-    
-    .compact-header {
-        text-align: center;
-        padding: 0.5rem 0 2rem 0;
+    /* Header */
+    .chatgpt-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary);
         border-bottom: 1px solid var(--border);
-        margin-bottom: 1.5rem;
+        padding: 1rem 2rem;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     
-    .main-title {
-        font-size: 2.8rem;
+    .header-title {
+        font-size: 1.5rem;
         font-weight: 700;
-        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin: 0;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
-
-    .subtitle {
-        font-size: 1.05rem;
+    
+    .header-stats {
+        display: flex;
+        gap: 2rem;
+        font-size: 0.9rem;
         color: var(--text-secondary);
-        margin-top: 0.35rem;
-        font-weight: 500;
     }
-
-    .info-grid {
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Main content area */
+    .main-content {
+        margin-top: 70px;
+        margin-bottom: 100px;
+        padding: 2rem;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+        min-height: calc(100vh - 170px);
+    }
+    
+    /* Empty state */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        text-align: center;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state-subtitle {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+    
+    .example-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-top: 2rem;
     }
-
-    .info-card {
+    
+    .example-card {
         background: var(--bg-secondary);
         border: 1px solid var(--border);
-        border-radius: 1.25rem;
-        padding: 1.2rem 1.4rem;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
     }
-
-    .info-card span {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-secondary);
+    
+    .example-card:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-blue);
     }
-
-    .info-card h3 {
-        margin: 0.35rem 0 0 0;
-        font-size: 2rem;
-        color: var(--text-primary);
-    }
-
-    .info-card small {
-        color: var(--text-secondary);
-    }
-
-    .stButton button {
-        border-radius: 999px;
-        padding: 0.75rem 1.5rem;
+    
+    .example-card-title {
         font-weight: 600;
-        border: none;
-        background: linear-gradient(120deg, #1e3a8a, #3b82f6);
-        color: #ffffff;
-        box-shadow: 0 10px 25px rgba(30, 58, 138, 0.25);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
     }
-
-    .stButton button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 15px 30px rgba(30, 58, 138, 0.35);
+    
+    .example-card-desc {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
     }
-
+    
+    /* Messages */
+    .message-container {
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: 1rem;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .message-user {
+        justify-content: flex-end;
+    }
+    
+    .message-content {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        line-height: 1.5;
+        word-wrap: break-word;
+    }
+    
+    .message-user .message-content {
+        background: var(--message-user);
+        color: white;
+        border-radius: 0.75rem 0.75rem 0 0.75rem;
+    }
+    
+    .message-assistant .message-content {
+        background: var(--message-assistant);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem 0.75rem 0.75rem 0;
+    }
+    
+    /* Input area */
+    .input-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, var(--bg-primary), rgba(255, 255, 255, 0.8));
+        padding: 1.5rem 2rem;
+        z-index: 99;
+        border-top: 1px solid var(--border);
+    }
+    
+    .input-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .search-bar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+    
+    .search-input-wrapper {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .search-input-wrapper:focus-within {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.1);
+    }
+    
     div[data-testid="stTextInput"] {
         background: transparent !important;
         border: none !important;
-        padding: 0;
-        margin: 0;
+        padding: 0 !important;
+        margin: 0 !important;
     }
-
+    
     div[data-testid="stTextInput"] input {
-        height: 3.4rem;
-        font-size: 1.05rem;
-        border-radius: 999px;
-        border: 1.5px solid var(--accent-blue-soft);
-        padding: 0 1.5rem 0 2rem;
-        box-shadow: inset 0 0 0 1px rgba(30, 64, 175, 0.05);
-        background-color: #ffffff;
-        transition: box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-
-    div[data-testid="stTextInput"] input:focus {
-        border-color: var(--accent-blue);
-        box-shadow: inset 0 0 0 1px rgba(30, 64, 175, 0.1), 0 20px 45px rgba(30, 64, 175, 0.12);
-    }
-
-    div[data-testid="stFileUploader"] section {
-        border: none;
-        background: transparent;
-        padding: 0;
-        box-shadow: none;
-    }
-
-    div[data-testid="stSlider"] {
-        padding: 0;
-        margin: 0;
-        background: transparent;
-        border: none;
-    }
-
-    div[data-testid="stSlider"] > div {
-        padding: 0;
-        margin: 0;
-        background: transparent;
-    }
-
-    div[role="slider"] {
-        background: linear-gradient(90deg, #1e3a8a, #3b82f6);
-        border-radius: 999px;
-        height: 6px;
-    }
-
-    .mode-shell {
-        padding: 0.5rem 1rem 0.75rem;
-    }
-
-    .section-gap {
-        height: 9rem;
-        margin: 2rem 0;
-    }
-
-    .bottom-search-shell {
-        position: sticky;
-        bottom: 1.5rem;
-        width: calc(100% - 4rem);
-        margin: 0 auto;
-        z-index: 90;
-    }
-
-    .bottom-search-bar {
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 0.4rem 1rem;
-        box-shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
-        display: flex;
-        align-items: center;
-        gap: 0.45rem;
-        backdrop-filter: blur(10px);
-    }
-
-    .bottom-search-bar input {
-        background: transparent;
-        border: none;
+        background: transparent !important;
+        border: none !important;
         outline: none !important;
-        width: 100%;
         font-size: 1rem;
         color: var(--text-primary);
-        padding: 0;
-        text-align: center;
-        line-height: 2rem;
+        padding: 0 !important;
+        width: 100%;
     }
-
-    .bottom-search-bar .stButton button {
-        background: linear-gradient(120deg, #1e3a8a, #3b82f6);
-        border-radius: 999px;
-        padding: 0.55rem 1.4rem;
-        border: none;
-        font-weight: 600;
-        box-shadow: 0 12px 30px rgba(30, 58, 138, 0.25);
+    
+    div[data-testid="stTextInput"] input::placeholder {
+        color: var(--text-secondary);
     }
-
-    .bottom-search-bar .icon-button button {
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .icon-btn {
         background: transparent;
-        border: none;
-        font-size: 1.35rem;
-        color: var(--accent-blue);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 42px;
-        height: 42px;
-        min-width: 42px;
-        padding: 0;
+        width: 40px;
+        height: 40px;
     }
-
-    .mini-upload {
-        margin-top: 0.85rem;
-        padding: 1rem;
-        border-radius: 1rem;
-        border: 1px dashed var(--accent-blue-soft);
+    
+    .icon-btn:hover {
         background: var(--bg-secondary);
-        font-size: 0.95rem;
-        color: var(--text-secondary);
+        border-color: var(--accent-blue);
     }
-
-    .precision-panel {
-        margin-top: 0.85rem;
-        padding: 1rem;
-        border-radius: 1rem;
+    
+    .send-btn {
+        background: var(--accent-blue);
+        border: none;
+        color: white;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .send-btn:hover {
+        background: var(--accent-blue-light);
+    }
+    
+    .send-btn:disabled {
+        background: var(--border);
+        cursor: not-allowed;
+    }
+    
+    /* Panels */
+    .panel {
         background: var(--bg-secondary);
         border: 1px solid var(--border);
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 0.5rem;
     }
-
-    .precision-highlight {
+    
+    .panel-title {
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 0.35rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
-
-    .precision-note {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
+    
+    /* File uploader */
+    div[data-testid="stFileUploader"] {
+        background: transparent !important;
+    }
+    
+    div[data-testid="stFileUploader"] section {
+        border: 1px dashed var(--border) !important;
+        border-radius: 0.75rem !important;
+        padding: 1rem !important;
+        background: var(--bg-secondary) !important;
+    }
+    
+    /* Slider */
+    div[data-testid="stSlider"] {
+        padding: 0.5rem 0;
+    }
+    
+    /* Buttons */
+    .stButton button {
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+    
+    .stButton button:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-blue);
+    }
+    
+    .mode-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .mode-btn {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background: var(--bg-secondary);
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+    
+    .mode-btn.active {
+        background: var(--accent-blue);
+        color: white;
+        border-color: var(--accent-blue);
+    }
+    
+    .mode-btn:hover {
+        border-color: var(--accent-blue);
     }
 </style>
 """
@@ -266,7 +402,7 @@ st.markdown(THEME, unsafe_allow_html=True)
 
 # Initialisation
 if "mode" not in st.session_state:
-    st.session_state.mode = "insertion"
+    st.session_state.mode = "recherche"
 if "uploaded_files" not in st.session_state:
     st.session_state.uploaded_files = []
 if "messages" not in st.session_state:
@@ -278,119 +414,147 @@ if "show_upload_panel" not in st.session_state:
 if "show_precision_panel" not in st.session_state:
     st.session_state.show_precision_panel = False
 
-# Header compact
-st.markdown("""
-<div class="compact-header">
-    <div class="main-title">TabExplorer</div>
-    <div class="subtitle">recherchez vos données grace à l'intelligence artificielle</div>
+# Header
+last_file = st.session_state.uploaded_files[-1].name if st.session_state.uploaded_files else "Aucun"
+st.markdown(f"""
+<div class="chatgpt-header">
+    <div class="header-title">🔍 TabExplorer</div>
+    <div class="header-stats">
+        <div class="stat-item">📁 {len(st.session_state.uploaded_files)} fichiers</div>
+        <div class="stat-item">📊 Mode: {st.session_state.mode.capitalize()}</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-# --------------------------------------------------------------------
-# ⚡️ BANDEAU D'INDICATEURS
-# --------------------------------------------------------------------
+# Main content area
+st.markdown("<div class='main-content'>", unsafe_allow_html=True)
 
-last_file = st.session_state.uploaded_files[-1].name if st.session_state.uploaded_files else "Aucun import"
-stats_container = st.container()
-with stats_container:
-    st.markdown(
-        f"""
-        <div class="info-grid">
-            <div class="info-card">
-                <span>Fichiers importés</span>
-                <h3>{len(st.session_state.uploaded_files)}</h3>
-                <small>Total disponible</small>
+# Display messages or empty state
+if not st.session_state.messages:
+    st.markdown("""
+    <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <div class="empty-state-title">Bienvenue sur TabExplorer</div>
+        <div class="empty-state-subtitle">Explorez vos données avec l'intelligence artificielle</div>
+        <div class="example-grid">
+            <div class="example-card">
+                <div class="example-card-title">📊 Analyser</div>
+                <div class="example-card-desc">Analysez vos données en profondeur</div>
             </div>
-            <div class="info-card">
-                <span>Mode actif</span>
-                <h3>{st.session_state.mode.capitalize()}</h3>
-                <small>Basculer via les boutons</small>
+            <div class="example-card">
+                <div class="example-card-title">🔎 Rechercher</div>
+                <div class="example-card-desc">Trouvez exactement ce que vous cherchez</div>
             </div>
-            <div class="info-card">
-                <span>Dernier fichier</span>
-                <h3 style="font-size:1.2rem;">{last_file}</h3>
-                <small>Dernière référence</small>
+            <div class="example-card">
+                <div class="example-card-title">📈 Visualiser</div>
+                <div class="example-card-desc">Découvrez des insights visuels</div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    # Display messages
+    for msg in st.session_state.messages:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        
+        if role == "user":
+            st.markdown(f"""
+            <div class="message-container message-user">
+                <div class="message-content">{content}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="message-container">
+                <div class="message-content">{content}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-# --------------------------------------------------------------------
-# 🔧 BOUTONS + BARRE DE RECHERCHE + UPLOAD
-# --------------------------------------------------------------------
+st.markdown("</div>", unsafe_allow_html=True)
 
-interaction_zone = st.container()
-with interaction_zone:
+# Input area (fixed at bottom)
+st.markdown("""
+<div class="input-container">
+    <div class="input-wrapper">
+        <div class="search-bar">
+            <div class="search-input-wrapper">
+""", unsafe_allow_html=True)
 
-    st.markdown("<div class='mode-shell'>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
-        btn_cols = st.columns([1, 1])
-        with btn_cols[0]:
-            if st.button("📤 Mode insertion", key="btn_insertion"):
-                st.session_state.mode = "insertion"
-                st.rerun()
-        with btn_cols[1]:
-            if st.button("🔎 Mode recherche", key="btn_recherche"):
-                st.session_state.mode = "recherche"
-                st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+# Input field
+user_input = st.text_input(
+    "Message",
+    placeholder="Posez une question ou décrivez ce que vous cherchez...",
+    key="user_input",
+    label_visibility="collapsed",
+)
 
-st.markdown("<div class='section-gap'></div>", unsafe_allow_html=True)
+st.markdown("""
+            </div>
+            <div class="action-buttons">
+""", unsafe_allow_html=True)
 
-bottom_shell = st.container()
-with bottom_shell:
-    st.markdown("<div class='bottom-search-shell'>", unsafe_allow_html=True)
-    search_cols = st.columns([4, 0.6, 0.6, 1.4])
-    with search_cols[0]:
-        quick_msg = st.text_input(
-            "Message rapide",
-            placeholder="Posez une question ou décrivez ce que vous cherchez...",
-            key="quick_input",
-            label_visibility="collapsed",
-        )
-    with search_cols[1]:
-        if st.button("➕", key="toggle_upload_panel", help="Ajouter un document"):
-            st.session_state.show_upload_panel = not st.session_state.show_upload_panel
-    with search_cols[2]:
-        if st.button("🎯", key="toggle_precision_panel", help="Ajuster la précision"):
-            st.session_state.show_precision_panel = not st.session_state.show_precision_panel
-    with search_cols[3]:
-        if st.button("Envoyer", key="quick_send"):
-            if quick_msg:
-                st.session_state.messages.append({"role": "user", "content": quick_msg})
-                st.session_state.quick_input = ""
-                st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+# Action buttons
+col1, col2, col3 = st.columns([1, 1, 1])
 
-    if st.session_state.show_upload_panel:
-        st.markdown("<div class='mini-upload'>", unsafe_allow_html=True)
-        st.markdown("<strong>Glissez & déposez vos fichiers</strong>", unsafe_allow_html=True)
-        mini_upload = st.file_uploader(
-            "Glisser vos fichiers",
-            type=["jpeg", "jpg", "png", "pdf", "txt"],
-            label_visibility="collapsed",
-            key="mini_upload",
-        )
-        if mini_upload and mini_upload not in st.session_state.uploaded_files:
-            st.session_state.uploaded_files.append(mini_upload)
+with col1:
+    if st.button("📁", key="toggle_upload", help="Ajouter un fichier", use_container_width=True):
+        st.session_state.show_upload_panel = not st.session_state.show_upload_panel
+
+with col2:
+    if st.button("⚙️", key="toggle_precision", help="Précision", use_container_width=True):
+        st.session_state.show_precision_panel = not st.session_state.show_precision_panel
+
+with col3:
+    if st.button("📤", key="send_message", help="Envoyer", use_container_width=True):
+        if user_input.strip():
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            st.session_state.user_input = ""
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
-    if st.session_state.show_precision_panel:
-        st.markdown("<div class='precision-panel'>", unsafe_allow_html=True)
-        st.markdown("<div class='precision-highlight'>Réglage de précision</div>", unsafe_allow_html=True)
-        st.session_state.precision = st.slider(
-            "",
-            30,
-            90,
-            st.session_state.precision,
-            1,
-            key="precision_adjust",
-        )
-        st.markdown(
-            "<div class='precision-note'>Plus haut : réponses plus précises.</div>",
-            unsafe_allow_html=True,
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("""
+            </div>
+        </div>
+""", unsafe_allow_html=True)
+
+# Upload panel
+if st.session_state.show_upload_panel:
+    st.markdown("""
+    <div class="panel">
+        <div class="panel-title">📁 Ajouter des fichiers</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    uploaded_file = st.file_uploader(
+        "Glissez & déposez vos fichiers",
+        type=["jpeg", "jpg", "png", "pdf", "txt", "csv", "xlsx"],
+        label_visibility="collapsed",
+        key="file_uploader",
+    )
+    if uploaded_file and uploaded_file not in st.session_state.uploaded_files:
+        st.session_state.uploaded_files.append(uploaded_file)
+        st.rerun()
+
+# Precision panel
+if st.session_state.show_precision_panel:
+    st.markdown("""
+    <div class="panel">
+        <div class="panel-title">⚙️ Réglage de précision</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.session_state.precision = st.slider(
+        "Précision",
+        30,
+        100,
+        st.session_state.precision,
+        1,
+        key="precision_slider",
+        label_visibility="collapsed",
+    )
+    st.markdown(f"<div style='color: var(--text-secondary); font-size: 0.9rem;'>Précision: {st.session_state.precision}%</div>", unsafe_allow_html=True)
+
+st.markdown("""
+    </div>
+</div>
+""", unsafe_allow_html=True)
