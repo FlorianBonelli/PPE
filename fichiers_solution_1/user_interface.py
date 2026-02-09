@@ -1,5 +1,5 @@
 import streamlit as st
-# from streamlit_pdf_viewer import pdf_viewer  # Module non installé - commenté pour ergonomie
+from streamlit_pdf_viewer import pdf_viewer
 import ia_manip
 import db_manip
 import pdf_manip
