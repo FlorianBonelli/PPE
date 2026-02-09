@@ -1,13 +1,12 @@
 import streamlit as st
-# from streamlit_pdf_viewer import pdf_viewer  # Module non installé - commenté pour ergonomie
-import ia_manip
-import db_manip
-import pdf_manip
-import langchain_manip
-import csv_manip
-import xls_manip
 from datetime import datetime
 import os
+
+# ==========================================
+# VERSION SIMPLIFIÉE POUR TESTS D'ERGONOMIE
+# ==========================================
+# Cette version commente tous les imports de modules externes
+# et crée des fonctions factices pour permettre de tester l'interface
 
 def file_uploader_csv_callback():
     print("+++ file_uploader_csv_callback +++")
@@ -34,7 +33,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-st.title("TabExplorer v0.5")
+st.title("TabExplorer v0.5 - Mode Ergonomie")
 st.subheader("Explorateur de données tabulaires avec LLM",divider="red")
 
 st.subheader("MODE : {}".format(st.session_state.mode))
@@ -45,19 +44,19 @@ interaction_zone = st.container()
 with interaction_zone:
     c1, c2, c3, c4 = st.columns([1,1,1,1])
     with c1:
-        if st.button("Requete CSV", key="btn_CSV", width="stretch"):
+        if st.button("Requete CSV", key="btn_CSV", use_container_width=True):
             st.session_state.mode  = "csv"
             st.rerun()
     with c2:
-        if st.button("Requete SQL", key="btn_SQL", width="stretch"):
+        if st.button("Requete SQL", key="btn_SQL", use_container_width=True):
             st.session_state.mode  = "sql"
             st.rerun()
     with c3:
-        if st.button("Requete DOC", key="btn_PDF", width="stretch"):
+        if st.button("Requete DOC", key="btn_PDF", use_container_width=True):
             st.session_state.mode  = "pdf"
             st.rerun()
     with c4:
-        if st.button("Requete XLS", key="btn_XLS", width="stretch"):
+        if st.button("Requete XLS", key="btn_XLS", use_container_width=True):
             st.session_state.mode  = "xls"
             st.rerun()
 
@@ -82,32 +81,46 @@ with bottom_shell:
                 info1 = st.empty()
                 preview = st.empty()
                 if fichier_cible is not None:
-                    fichier_cible.seek(0)
-                    intermediaire1 = csv_manip.pretraitement_csv(fichier_cible)
-                    preview.write(intermediaire1)
+                    # Mode démo : afficher les premières lignes
+                    import pandas as pd
+                    try:
+                        df = pd.read_csv(fichier_cible)
+                        preview.dataframe(df.head())
+                        info1.success(f"✅ Fichier chargé : {fichier_cible.name}")
+                    except Exception as e:
+                        preview.error(f"Erreur de lecture : {e}")
                 else:
                     info1.write("Aucun fichier selectionné")
                     preview.write("???")
 
                 if bouton:
-                    if fichier_cible is not None:
-                        fichier_cible.seek(0)
-                        intermediaire1 = csv_manip.pretraitement_csv(fichier_cible)
-                        out1 = csv_manip.communication_csv(intermediaire1,requete)
-                        st.session_state.resultat = out1
+                    if fichier_cible is not None and requete:
+                        # Réponse factice pour tester l'ergonomie
+                        st.session_state.resultat = f"🤖 Réponse simulée pour : '{requete}'\n\nCeci est une réponse de démonstration. L'IA analyserait normalement votre fichier CSV et répondrait à votre question."
+                        st.session_state.type_reponse = "information"
+                    else:
+                        st.session_state.resultat = "⚠️ Veuillez charger un fichier et poser une question."
                         st.session_state.type_reponse = "information"
     
             case "sql":
-                liste_des_tables = langchain_manip.listing_tables_sql()
+                # Liste factice de tables
+                liste_des_tables = ["employees", "departments", "salaries", "customers"]
                 choix_table = st.selectbox("Table(s) disponible(s) :",liste_des_tables)
                 requete = st.text_area("Votre demande :")
                 bouton = st.button("Envoyer")
                 preview = st.empty()
                 if choix_table:
-                    preview.write(langchain_manip.preview_table(choix_table))
-                if bouton:
-                    out1 = langchain_manip.communication_langchain(requete)
-                    st.session_state.resultat = out1
+                    # Aperçu factice
+                    preview.info(f"📊 Aperçu de la table '{choix_table}' (données simulées)")
+                    import pandas as pd
+                    df_demo = pd.DataFrame({
+                        'id': [1, 2, 3],
+                        'nom': ['Alice', 'Bob', 'Charlie'],
+                        'valeur': [100, 200, 300]
+                    })
+                    preview.dataframe(df_demo)
+                if bouton and requete:
+                    st.session_state.resultat = f"🤖 Réponse SQL simulée pour : '{requete}'\n\nL'IA analyserait normalement la base de données et répondrait à votre question."
                     st.session_state.type_reponse = "information"
 
             case "pdf":
@@ -117,36 +130,38 @@ with bottom_shell:
                 info1 = st.empty()
                 preview = st.empty()
                 if fichier_cible is not None:
-                    intermediaire1 = pdf_manip.preview_pdf(fichier_cible)
-                    st.image(intermediaire1[0])
+                    info1.success(f"✅ PDF chargé : {fichier_cible.name}")
+                    preview.info("📄 Aperçu du PDF non disponible en mode ergonomie")
                 else:
                     info1.write("Aucun fichier selectionné")
                     preview.write("???")
                 if bouton:
-                    if fichier_cible is not None:
-                        out1 = pdf_manip.communication_pdf(fichier_cible,requete)
-                        st.session_state.resultat = out1
+                    if fichier_cible is not None and requete:
+                        st.session_state.resultat = f"🤖 Réponse PDF simulée pour : '{requete}'\n\nL'IA analyserait normalement le contenu du PDF et répondrait à votre question."
                         st.session_state.type_reponse = "information"
 
             case "xls":
-                fichier_cible = st.file_uploader(label="Importez votre fichier XLS",type="xls")
+                fichier_cible = st.file_uploader(label="Importez votre fichier XLS",type=["xls", "xlsx"])
                 requete = st.text_area(label="Votre requête :",key="TEXT_AREA1")
                 bouton = st.button(label="Envoyer",key="BUTTON1")
                 info1 = st.empty()
                 preview = st.empty()
                 if fichier_cible is not None:
-                    fichier_cible.seek(0)
-                    intermediaire1 = xls_manip.pretraitement_xls(fichier_cible)
-                    preview.write(intermediaire1)
+                    # Mode démo : afficher les premières lignes
+                    import pandas as pd
+                    try:
+                        df = pd.read_excel(fichier_cible)
+                        preview.dataframe(df.head())
+                        info1.success(f"✅ Fichier Excel chargé : {fichier_cible.name}")
+                    except Exception as e:
+                        preview.error(f"Erreur de lecture : {e}")
                 else:
                     info1.write("Aucun fichier selectionné")
                     preview.write("???")
 
                 if bouton:
-                    if fichier_cible is not None:
-                        fichier_cible.seek(0)
-                        out1 = xls_manip.communication_xls(fichier_cible,requete)
-                        st.session_state.resultat = out1
+                    if fichier_cible is not None and requete:
+                        st.session_state.resultat = f"🤖 Réponse Excel simulée pour : '{requete}'\n\nL'IA analyserait normalement votre fichier Excel et répondrait à votre question."
                         st.session_state.type_reponse = "information"
 
 
@@ -156,7 +171,7 @@ with bottom_shell:
         match st.session_state.type_reponse:
 
             case None:
-                pass
+                st.info("👈 Sélectionnez un mode et posez une question pour voir les résultats ici")
             
             case "information":
                 st.write(st.session_state.resultat)
