@@ -1,5 +1,6 @@
 # analyzer.py
 import os
+import pandas as pd
 import json
 import csv
 import docx
@@ -66,20 +67,60 @@ def parse_pptx_file(path):
 
 def parse_xlsx_file(path):
     try:
-        wb = openpyxl.load_workbook(path, data_only=True)
-        all_text = ""
+        all_sheets = pd.read_excel(path, sheet_name=None, dtype=str)
+        
+        full_text = ""
         sheets_metadata = []
-        for sheet in wb.worksheets:
-            sheet_text = [f"--- FEUILLE : {sheet.title} ---"]
-            for row in sheet.iter_rows(values_only=True):
-                row_text = [str(cell) if cell is not None else "" for cell in row]
-                if any(row_text):
-                    sheet_text.append(" | ".join(row_text))
-            all_text += "\n".join(sheet_text) + "\n\n"
-            sheets_metadata.append(sheet.title)
-        return all_text, {"sheets": sheets_metadata}
+        
+        for sheet_name, df in all_sheets.items():
+            df = df.dropna(how='all', axis=0).dropna(how='all', axis=1)
+            df = df.fillna("")
+            
+            table_markdown = df.to_markdown(index=False)
+            
+            full_text += f"\n--- FEUILLE : {sheet_name} ---\n"
+            full_text += table_markdown
+            full_text += "\n\n"
+            
+            sheets_metadata.append(sheet_name)
+            
+        return full_text, {"sheets": sheets_metadata}
+        
     except Exception as e:
+        print(f"Erreur Excel Pandas: {e}")
         return None, None
+    
+
+def parse_pages(path):
+    try:
+        # On ouvre le .pages comme un fichier ZIP
+        with zipfile.ZipFile(path, 'r') as z:
+            file_list = z.namelist()
+            
+            # Apple range le PDF de prévisualisation à des endroits différents selon les versions
+            preview_files = ['Preview.pdf', 'preview.pdf', 'QuickLook/Preview.pdf']
+            
+            for preview_file in preview_files:
+                if preview_file in file_list:
+                    # On a trouvé le PDF caché ! On l'extrait temporairement
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+                        with z.open(preview_file) as pdf_file:
+                            temp_pdf.write(pdf_file.read())
+                        temp_path = temp_pdf.name
+                    
+                    # On utilise notre super fonction PDF pour le lire
+                    text, nb_pages, metadata = parse_pdf_robuste(temp_path)
+                    
+                    # On nettoie le fichier temporaire
+                    os.unlink(temp_path)
+                    
+                    if metadata is None: metadata = {}
+                    metadata["source"] = "pages_preview"
+                    return text, nb_pages, metadata
+            
+            return None, None, {"error": "Aucun aperçu PDF trouvé (Sauvegarder avec aperçu dans Pages)"}
+    except Exception as e:
+        return None, None, {"error": f"Erreur .pages: {str(e)}"}    
 
 def parse_docx_file(path):
     try:
@@ -178,7 +219,7 @@ def analyze_file(path, filename):
         text, metadata = parse_msg_file(path)
         nb_pages = 1
     elif ext == "pages":
-        text, nb_pages, metadata = parse_pages(path)
+        text, nb_pages, metadata = parse_pages(path)  
     elif ext in ("txt", "md", "log"):
         text, nb_lines = parse_txt(path)
     elif ext == "csv":
